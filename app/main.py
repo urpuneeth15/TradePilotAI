@@ -10,6 +10,7 @@ from app.routers.status import router as status_router
 from app.core.request_logger import RequestLoggerMiddleware
 from app.core.exception_handler import register_exception_handlers
 from app.core.logger import logger
+from app.market.analysis import router as analysis_router
 
 from app.services.market_poller import market_poller
 
@@ -75,6 +76,11 @@ app.include_router(
 app.include_router(
     auth_router,
     prefix="/auth"
+)
+
+app.include_router(
+    analysis_router,
+    prefix="/market"
 )
 
 # Status

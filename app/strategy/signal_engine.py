@@ -1,53 +1,85 @@
-from app.models.signal import Signal
-
-
 class SignalEngine:
 
-    @staticmethod
-    def decide(
-        ema_signal,
-        rsi_signal,
-        macd_signal
-    ):
+    def generate(self, indicators):
 
-        votes = [ema_signal, rsi_signal, macd_signal]
+        bullish = 0
+        bearish = 0
+        reasons = []
 
-        buy = votes.count("BUY")
-        sell = votes.count("SELL")
+        ema20 = indicators.get("ema20")
+        ema50 = indicators.get("ema50")
+        rsi = indicators.get("rsi")
+        macd = indicators.get("macd")
 
-        if buy > sell:
+        # EMA
+        if ema20 is not None and ema50 is not None:
 
-            return Signal(
-                signal="BUY",
-                confidence=buy * 33,
-                ema=ema_signal,
-                rsi=rsi_signal,
-                macd=macd_signal,
-                reason=[
-                    "Majority indicators are bullish"
-                ]
-            )
+            if ema20 > ema50:
+                bullish += 2
+                reasons.append("EMA20 above EMA50")
 
-        if sell > buy:
+            elif ema20 < ema50:
+                bearish += 2
+                reasons.append("EMA20 below EMA50")
 
-            return Signal(
-                signal="SELL",
-                confidence=sell * 33,
-                ema=ema_signal,
-                rsi=rsi_signal,
-                macd=macd_signal,
-                reason=[
-                    "Majority indicators are bearish"
-                ]
-            )
+        # RSI
 
-        return Signal(
-            signal="HOLD",
-            confidence=50,
-            ema=ema_signal,
-            rsi=rsi_signal,
-            macd=macd_signal,
-            reason=[
-                "Indicators are mixed"
-            ]
-        )
+        if rsi is not None:
+
+            if rsi < 30:
+                bullish += 2
+                reasons.append("RSI Oversold")
+
+            elif rsi > 70:
+                bearish += 2
+                reasons.append("RSI Overbought")
+
+            else:
+                bullish += 1
+                reasons.append("RSI Neutral")
+
+        # MACD
+
+        if macd:
+
+            value = macd.get("macd", 0)
+
+            if value > 0:
+                bullish += 2
+                reasons.append("MACD Bullish")
+
+            else:
+                bearish += 2
+                reasons.append("MACD Bearish")
+
+        # Final Decision
+
+        if bullish >= 5:
+            signal = "STRONG BUY"
+
+        elif bullish > bearish:
+            signal = "BUY"
+
+        elif bearish >= 5:
+            signal = "STRONG SELL"
+
+        elif bearish > bullish:
+            signal = "SELL"
+
+        else:
+            signal = "WAIT"
+
+        return {
+
+            "signal": signal,
+
+            "bullish_score": bullish,
+
+            "bearish_score": bearish,
+
+            "reasons": reasons
+
+        }
+
+
+signal_engine = SignalEngine()
