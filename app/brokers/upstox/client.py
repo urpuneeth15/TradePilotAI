@@ -1,6 +1,6 @@
 import requests
 
-from app.config.settings import settings
+from app.auth.token_manager import token_manager
 from app.brokers.broker_interface import BrokerInterface
 
 
@@ -10,8 +10,15 @@ class UpstoxClient(BrokerInterface):
 
     def _headers(self):
 
+        access_token = token_manager.load()
+
+        if not access_token:
+            raise Exception(
+                "No Upstox access token found. Please login at /auth/login"
+            )
+
         return {
-            "Authorization": f"Bearer {settings.UPSTOX_ACCESS_TOKEN}",
+            "Authorization": f"Bearer {access_token}",
             "Accept": "application/json"
         }
 
@@ -30,6 +37,8 @@ class UpstoxClient(BrokerInterface):
             headers=self._headers(),
             timeout=10
         )
+
+        response.raise_for_status()
 
         return response.json()
 
@@ -54,6 +63,8 @@ class UpstoxClient(BrokerInterface):
             headers=self._headers(),
             timeout=10
         )
+
+        response.raise_for_status()
 
         return response.json()
 

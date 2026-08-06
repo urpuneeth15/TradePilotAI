@@ -21,3 +21,17 @@ venv/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Runtime Storage
+storage/token.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+.env
+
+# Frontend
+node_modules/

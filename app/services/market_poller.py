@@ -4,6 +4,7 @@ import time
 from app.brokers.broker_manager import BrokerManager
 from app.services.live_market_service import live_market_service
 from app.core.logger import logger
+from app.core.constants import AppConstants
 
 
 class MarketPoller:
@@ -26,7 +27,8 @@ class MarketPoller:
 
         threading.Thread(
             target=self._poll,
-            daemon=True
+            daemon=True,
+            name="MarketPoller"
         ).start()
 
         logger.info("✅ Market Poller Started")
@@ -48,14 +50,26 @@ class MarketPoller:
 
                 try:
 
-                    response = broker.get_market_quote(instrument)
+                    response = broker.get_market_quote(
+                        instrument
+                    )
+
+                    if response.get("status") != "success":
+
+                        logger.warning(
+                            f"Failed to fetch {instrument}: {response}"
+                        )
+
+                        continue
 
                     data = response.get("data", {})
 
                     if not data:
+
                         logger.warning(
                             f"No market data received for {instrument}"
                         )
+
                         continue
 
                     for key, quote in data.items():
@@ -71,7 +85,7 @@ class MarketPoller:
                         f"Polling Error ({instrument}): {e}"
                     )
 
-            time.sleep(2)
+            time.sleep(AppConstants.REFRESH_INTERVAL)
 
 
 market_poller = MarketPoller()
